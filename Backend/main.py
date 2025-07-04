@@ -1,0 +1,29 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from utils.baseToImg import base64_to_image
+from utils.extract import extract_text_from_image
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+class ImageData(BaseModel):
+    image: str
+
+@app.post("/img")
+async def extracText(data: ImageData):
+    image = base64_to_image(data.image)
+    result = extract_text_from_image(image)
+    print(result)
+
+    if image is None:
+        return {"error": "Could not decode image"}
+
+    return {"message": "Image decoded successfully","data":result}
