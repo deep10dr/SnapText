@@ -38,7 +38,7 @@ function Home() {
   const sendToBackend = async () => {
     try {
       setLoading(true);
-      const response = await axios.post('http://127.0.0.1:8000/img', {
+      const response = await axios.post('https://snaptext-k2zc.onrender.com/img', {
         image: base64Image,
       });
 
