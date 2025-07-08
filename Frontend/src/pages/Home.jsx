@@ -64,6 +64,7 @@ function Home() {
   };
   function copyClip() {
     navigator.clipboard.writeText(responseData).then(() => { console.log('superb') }).catch((err) => { console.log(err) });
+    showAlert("text copied in clipboard", 'sucess');
   }
 
   return (
