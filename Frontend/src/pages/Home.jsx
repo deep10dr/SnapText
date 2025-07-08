@@ -13,8 +13,15 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [responseData, setResponseData] = useState('');
   const [file, setFile] = useState(null);
+  const [Alert, setAlert] = useState({ show: false, message: '', status: '' });
 
+  const showAlert = (message, status = 'error') => {
+    setAlert({ show: true, message: message, status: status })
+    setTimeout(() => {
+      setAlert({ show: false, message: '', status: '' })
+    }, 5000);
 
+  };
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       'image/jpeg': [],
@@ -26,9 +33,9 @@ function Home() {
       if (selectedFile) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          const base64 = reader.result.split(',')[1]; // remove prefix
+          const base64 = reader.result.split(',')[1];
           setBase64Image(base64);
-          setFile(selectedFile); // ✅ FIX: Set file inside onDrop
+          setFile(selectedFile);
         };
         reader.readAsDataURL(selectedFile);
       }
@@ -36,16 +43,21 @@ function Home() {
   });
 
   const sendToBackend = async () => {
+    if (!base64Image) {
+      console.log('error');
+      showAlert("please Select image  to extract");
+      return;
+    }
     try {
+
       setLoading(true);
-      const response = await axios.post('https://snaptext-k2zc.onrender.com/img', {
+      const response = await axios.post('http://127.0.0.1:8000/img', {
         image: base64Image,
       });
-
-      console.log(response.data?.data);
+      showAlert("Extracted sucessfully", 'success');
       setResponseData(response.data?.data);
     } catch (err) {
-      console.error('Upload failed:', err);
+      showAlert(`Error occur during extrcating ${err.toString()}`);
     } finally {
       setLoading(false);
     }
@@ -56,6 +68,11 @@ function Home() {
 
   return (
     <div className="w-full min-h-screen bg-[#e5e7eb] flex flex-col md:flex-row justify-center items-center space-y-4 p-4 relative">
+      {Alert.show &&
+        <div className={`absolute top-3 left-1/2  shadow-2xl  -translate-x-1/2 rounded-2xl px-6 py-2 flex justify-center items-center  ${Alert.status == 'error' ? 'bg-red-500 text-white' : 'bg-green-500'}`}>
+          <p className='font-semibold'>{Alert.message}</p>
+        </div>}
+
       <div className='flex-1 flex justify-center items-center flex-col'>
         <div {...getRootProps()} className="border-2 border-dashed border-gray-400 p-10 rounded-2xl hover:scale-105 transition-transform duration-300 text-center cursor-pointer md:w-max">
           <input {...getInputProps()} />
@@ -74,18 +91,21 @@ function Home() {
           <button
             className="p-2 bg-white border border-black hover:bg-black hover:text-white font-semibold text-black rounded-2xl"
             onClick={sendToBackend}
-            disabled={loading || !file}
+            disabled={loading}
           >
             {loading ? <FaHourglassEnd /> : <BsFillSendFill />}
           </button>
           <button
             className="p-2 bg-white border border-black hover:bg-black hover:text-white font-semibold text-black rounded-2xl"
             onClick={() => {
+              if (!file) {
+                showAlert("There is no Image no need to refresh")
+              }
               setFile(null);
               setBase64Image('');
               setResponseData('');
             }}
-            disabled={loading || !file}
+            disabled={loading}
           >
             {loading ? <FaClockRotateLeft /> : <IoMdRefresh />}
           </button>
